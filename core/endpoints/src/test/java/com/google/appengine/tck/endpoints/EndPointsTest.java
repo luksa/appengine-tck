@@ -15,6 +15,7 @@
 
 package com.google.appengine.tck.endpoints;
 
+import java.io.File;
 import java.net.URL;
 
 import com.google.appengine.tck.base.TestContext;
@@ -23,9 +24,13 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.arquillian.test.api.ArquillianResource;
+import org.jboss.shrinkwrap.api.exporter.ZipExporter;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import static org.junit.Assert.*;
 
 /**
  * @author <a href="mailto:mluksa@redhat.com">Marko Luksa</a>
@@ -44,6 +49,7 @@ public class EndPointsTest extends EndPointsTestBase {
         war.addAsWebInfResource("testEndPoint-v2.api");
         war.addAsWebInfResource("endPointWithoutVersion-v1.api");
         war.addAsWebInfResource("myapi-v2.api");
+        war.as(ZipExporter.class).exportTo(new File("C:\\temp\\endpoints\\war\\war.zip"), true);
         return war;
     }
 
@@ -109,6 +115,22 @@ public class EndPointsTest extends EndPointsTestBase {
         URL endPointUrl = toHttps(new URL(url, createPath("endPointWithoutVersion", "v1", "withoutParameters")));
         String response = invokeEndpointWithGet(endPointUrl);
         assertResponse("method withoutParameters was invoked", response);
+    }
+
+    @Test
+    @RunAsClient
+    public void testSerializers(@ArquillianResource URL url) throws Exception {
+        URL endPointUrl = toHttps(new URL(url, createPath("endPointWithCustomSerializer", "v1", "test")));
+        String response = invokeEndpointWithGet(endPointUrl);
+        assertEquals("custom serializer output: method test was invoked", response);
+    }
+
+    @Test
+    @RunAsClient
+    public void testApiSerializer(@ArquillianResource URL url) throws Exception {
+        URL endPointUrl = toHttps(new URL(url, createPath("endPointWithCustomSerializer", "v1", "test2")));
+        String response = invokeEndpointWithGet(endPointUrl);
+        assertEquals("other custom serializer output: method test2 was invoked", response);
     }
 
     protected String createPath(String methodPath) {
