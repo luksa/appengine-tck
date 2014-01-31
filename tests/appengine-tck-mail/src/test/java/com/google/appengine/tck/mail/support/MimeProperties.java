@@ -110,10 +110,11 @@ public class MimeProperties extends AbstractTempData implements Serializable {
     }
 
     private String getContentAsString(BodyPart bodyPart) throws IOException, MessagingException {
-        byte[] buf = new byte[bodyPart.getSize()];
-        DataInputStream din = new DataInputStream(bodyPart.getInputStream());
-        din.readFully(buf);
-        return new String(buf);
+        try (DataInputStream din = new DataInputStream(bodyPart.getInputStream())) {
+            byte[] buf = new byte[bodyPart.getSize()];
+            din.readFully(buf);
+            return new String(buf);
+        }
     }
 
     public String subject = BLANK;  // use as key
